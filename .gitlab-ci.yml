@@ -1,0 +1,69 @@
+image: mcr.microsoft.com/dotnet/sdk:6.0
+variables:
+  OBJECTS_DIRECTORY: 'obj'
+  NUGET_PACKAGES_DIRECTORY: '.nuget'
+  SOURCE_CODE_PATH: 'IronApp'
+cache:
+  key: "$CI_JOB_STAGE-$CI_COMMIT_REF_SLUG"
+  paths:
+    - '$SOURCE_CODE_PATH/$OBJECTS_DIRECTORY/project.assets.json'
+    - '$SOURCE_CODE_PATH/$OBJECTS_DIRECTORY/*.csproj.nuget.*'
+    - '$NUGET_PACKAGES_DIRECTORY'
+  policy: pull-push
+
+
+build:
+  stage: build
+  before_script:
+    - 'dotnet restore --packages $NUGET_PACKAGES_DIRECTORY'
+  script:
+    - 'dotnet build --no-restore --configuration Release'
+  artifacts:
+    paths:
+      - $SOURCE_CODE_PATH/bin/Release/net6.0
+
+buildNpm:
+  image: node:14.19.3-alpine
+  stage: build
+  script:
+    - npm i -g npm@latest
+    - cd $SOURCE_CODE_PATH/ClientApp/
+    - npm install --progress=false
+    - npm run build
+  artifacts:
+    paths:
+      - $SOURCE_CODE_PATH/ClientApp/dist
+
+tests:
+  stage: test
+  before_script:
+  - 'dotnet restore --packages $NUGET_PACKAGES_DIRECTORY'
+  script:
+    - 'dotnet test --no-restore'
+    
+deploy:
+  image: kroniak/ssh-client
+  stage: deploy
+  script:
+    - ls IronApp/bin/Release/net6.0
+    - ls IronApp/bin/Release/net6.0/
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    - echo "$ID_RSA" > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - "ssh $SERVER_USER@$SERVER_IP \"sudo /bin/systemctl stop fragerundeApi.service\""
+
+    - "ssh $SERVER_USER@$SERVER_IP \"rm -r -f /opt/Fragerunde/Api\""
+    - "ssh $SERVER_USER@$SERVER_IP \"mkdir /opt/Fragerunde/Api\""
+
+    - "ssh $SERVER_USER@$SERVER_IP \"rm -r -f /opt/Fragerunde/Frontend\""
+    - "ssh $SERVER_USER@$SERVER_IP \"mkdir /opt/Fragerunde/Frontend\""
+
+    - scp -r IronApp/bin/Release/net6.0/* $SERVER_USER@$SERVER_IP:/opt/Fragerunde/Api
+    - scp -r IronApp/ClientApp/dist/* $SERVER_USER@$SERVER_IP:/opt/Fragerunde/Frontend
+    
+    - "ssh $SERVER_USER@$SERVER_IP \"sudo /bin/systemctl start fragerundeApi.service\""
+    
+
+
