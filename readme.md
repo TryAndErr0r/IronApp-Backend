@@ -5,14 +5,10 @@ Beim Anmelden gibt der Server den Clients einen Bearer Token fuer die Zukuenftig
 Die Daten werden in einer InMemory SQL Datenbank gespeichert. 
 
 # RestApi
-RestApi zum registrieren von Lobbies und zum anmelden von clients 
-IronApp/Controllers/QuizRegistrationController.cs
-RestApi fuer alle Quiz internen interaktionen 
-IronApp/Controllers/QuizController
-Alle Dto-Klassen zur sicheren Kommunikation in 
-IronApp/Model/ExchangeModels
-Alle Datenbankmodels in 
-IronApp/Model/QuizEntityModels
+RestApi zum registrieren von Lobbies und zum anmelden von clients IronApp/Controllers/QuizRegistrationController.cs<br>
+RestApi fuer alle Quiz internen interaktionen IronApp/Controllers/QuizController<br>
+Alle Dto-Klassen zur sicheren Kommunikation in IronApp/Model/ExchangeModels<br>
+Alle Datenbankmodels in IronApp/Model/QuizEntityModels<br>
 
 # SignalR
 SignalR, websocket implementierung, zum live updaten von Clients. Broadcastet neue Antworten damit die Jury neue Antworten live sofort sehen kann.
